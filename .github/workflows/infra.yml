@@ -3,8 +3,12 @@ name: Infrastructure
 on:
   push:
     paths:
-      - 'infra/**'
+      - 'infra/platform/**'
   workflow_dispatch:
+
+concurrency:
+  group: terraform-platform-dev
+  cancel-in-progress: false
 
 jobs:
   terraform:
@@ -12,11 +16,14 @@ jobs:
 
     defaults:
       run:
-        working-directory: infra/terraform/environments/dev
+        working-directory: infra/platform/terraform/environments/dev
 
     steps:
       - uses: actions/checkout@v4
 
+      # -------------------------
+      # AWS Authentication
+      # -------------------------
       - name: Configure AWS
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -24,10 +31,45 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
+      # -------------------------
+      # Terraform Setup
+      # -------------------------
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - run: terraform init
-      - run: terraform validate
-      - run: terraform plan
-      - run: terraform apply -auto-approve
+      # -------------------------
+      # Init
+      # -------------------------
+      - name: Terraform Init
+        run: terraform init -input=false
+
+      # -------------------------
+      # Validate
+      # -------------------------
+      - name: Terraform Validate
+        run: terraform validate
+
+      # -------------------------
+      # Format Check (Best Practice)
+      # -------------------------
+      - name: Terraform Fmt
+        run: terraform fmt -check
+
+      # -------------------------
+      # PLAN (deterministic)
+      # -------------------------
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan -input=false
+
+      # Save plan artifact
+      - name: Upload Plan Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: infra/platform/terraform/environments/dev/tfplan
+
+      # -------------------------
+      # APPLY EXACT PLAN
+      # -------------------------
+      - name: Terraform Apply
+        run: terraform apply -input=false -auto-approve tfplan
