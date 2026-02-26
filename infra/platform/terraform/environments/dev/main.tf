@@ -9,12 +9,12 @@ module "lambda" {
   lambda_role_arn = module.iam.lambda_role_arn
 }
 
-module "apigateway" {
-  source            = "../../modules/apigateway"
-  project_name      = var.project_name
-  lambda_invoke_arn = module.lambda.lambda_invoke_arn
-  lambda_name       = module.lambda.lambda_name
-}
+# module "apigateway" {
+#   source            = "../../modules/apigateway"
+#   project_name      = var.project_name
+#   lambda_invoke_arn = module.lambda.lambda_invoke_arn
+#   lambda_name       = module.lambda.lambda_name
+# }
 
 # module "test" {
 #   source         = "../../modules/test"
