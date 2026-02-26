@@ -16,8 +16,8 @@ module "apigateway" {
   lambda_name       = module.lambda.lambda_name
 }
 
-module "test" {
-  source         = "../../modules/test"
-  project_name   = var.project_name
-  log_group_name = module.test.log_group_name
-}
+# module "test" {
+#   source         = "../../modules/test"
+#   project_name   = var.project_name
+#   log_group_name = module.test.log_group_name
+# }
